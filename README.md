@@ -1,2 +1,2 @@
 # chickenSim
-A Simulation for managing your prestigious chickens all around the county
+A Simulation game for managing your prestigious chickens all around the county
