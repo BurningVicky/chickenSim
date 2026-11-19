@@ -1,13 +1,16 @@
-from django.shortcuts import render
+from django.db.models import Q
+
 from django.contrib.auth.decorators import login_required
+
+from django.shortcuts import render
 from django.shortcuts import redirect
 
-from django.views.generic import TemplateView, CreateView, ListView
+from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView
 
 from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin
 from .models import Animal, Propriedade, Transferencia
 
-from .forms import PropriedadeForm
+from .forms import PropriedadeForm, AnimalForm
 
 from django.urls import reverse_lazy
 
@@ -63,3 +66,50 @@ class PropriedadeCreateView(CartorioRequiredMixin, CreateView):
     form_class = PropriedadeForm
     template_name = 'cartorio/propriedade_form.html'
     sucess_url = reverse_lazy('propriedade_list')
+
+
+class AnimalListView(CartorioRequiredMixin, ListView):
+    model = Animal
+    template_name = 'cartorio/animal_list.html'
+    context_object_name = 'animais'
+
+    def get_querset(self):
+        qs = Animal.objects.select_related(
+            'raca', 'propriedade_atual', 'propriedade_atual__produtor'
+        ).order_by('nome')
+        busca = self.request.GET.get('q', '').strip()
+        if busca:
+            qs = qs.filter(
+                Q(numero_registro__icontains=busca) | Q(nome__icontains=busca)
+            )
+        return qs
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(kwargs)
+        context['busca'] = self.request.GET.get('q', '').strip()
+        return context
+
+class AnimalCreateView(CartorioRequiredMixin, CreateView):
+    model = Animal
+    form_class = AnimalForm
+    template_name = 'cartorio/animal_form.html'
+    sucess_url = reverse_lazy('animal_list')
+
+class AnimalDetailView(CartorioRequiredMixin, DetailView):
+    model = Animal
+    template_name = 'cartorio/animal_detail.html'
+    context_object_name = 'animal'
+
+    def get_queryset(self):
+        return Animal.objects.select_related(
+            'raca',
+            'propriedade_atual',
+            'propriedade_atual__produtor',
+            'pai',
+            'mae',
+        )
+    
+class AnimalUpdateView(CartorioRequiredMixin, UpdateView):
+    model = Animal
+    form_class = AnimalForm
+    template_name = 'cartorio/animal_form.html'
+    sucess_url = reverse_lazy('animal_list')
