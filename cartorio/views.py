@@ -1,9 +1,16 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
-from django.views.generic import TemplateView
+
+from django.views.generic import TemplateView, CreateView, ListView
+
 from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin
 from .models import Animal, Propriedade, Transferencia
+
+from .forms import PropriedadeForm
+
+from django.urls import reverse_lazy
+
 
 @login_required
 def dashboard_router(request):
@@ -34,3 +41,25 @@ class ProdutorDashboardView(ProdutorRequiredMixin, TemplateView):
         context['animais'] = animais
         context['transferencias'] = transferencias
         return context
+
+class PropriedadeCreateView(CartorioRequiredMixin, ListView):
+    model = Propriedade
+    template_name = 'cartorio/propriedade_list.html'
+    context_object_name = 'propriedades'
+
+    def get_queryset(self):
+        return Propriedade.objects.select_related('produtor').order_by('nome')
+
+class PropriedadeListView(CartorioRequiredMixin, ListView):
+    model = Propriedade
+    template_name = 'cartorio/propriedade_list.html'
+    context_object_name = 'propriedades'
+
+    def get_queryset(self):
+        return Propriedade.objects.select_related('produtor').order_by('nome')
+
+class PropriedadeCreateView(CartorioRequiredMixin, CreateView):
+    model = Propriedade
+    form_class = PropriedadeForm
+    template_name = 'cartorio/propriedade_form.html'
+    sucess_url = reverse_lazy('propriedade_list')

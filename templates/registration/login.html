@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar - Chicken Sim</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center px-4">
+  <div class="w-full max-w-md bg-white p-6 rounded-lg border border-slate-200 shadow-xs space-y-6">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Chicken Simulator</h1>
+      <p class="text-sm text-slate-600 mt-1">Acesse com sua conta para continuar.</p>
+    </div>
+
+    {% if form.errors %}
+      <div class="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-700">
+        Usuário ou senha inválidos. Verifique suas credenciais e tente novamente.
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+            {{ field.label }}
+          </label>
+          <input
+            type="{{ field.field.widget.input_type|default:'text' }}"
+            name="{{ field.html_name }}"
+            id="{{ field.id_for_label }}"
+            {% if field.value %}value="{{ field.value }}"{% endif %}
+            class="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            required
+          >
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="w-full bg-slate-900 text-white text-sm font-medium py-2 rounded hover:bg-slate-800">
+        Entrar
+      </button>
+    </form>
+  </div>
+</body>
+</html>
