@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
-class Usuario(User):
+class Usuario(AbstractUser):
     is_cartorio = models.BooleanField(default=False)
 
 class Raca(models.Model):
@@ -16,7 +16,7 @@ class Propriedade(models.Model):
     nome = models.CharField(max_length=150)
     municipio = models.CharField(max_length=100)
     produtor = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='propriedades'
+        Usuario, on_delete=models.CASCADE, related_name='propriedades'
     )
 
     def __str__(self):
