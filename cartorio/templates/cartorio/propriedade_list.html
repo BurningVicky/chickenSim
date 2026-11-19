@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propriedades - Chicken Sim</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="{% url 'cartorio_dashboard' %}" class="font-bold text-lg text-slate-900">
+        Chicken Sim
+      </a>
+      <span class="text-slate-300">|</span>
+      <a href="{% url 'propriedade_list' %}" class="text-sm font-medium text-slate-900">
+        Propriedades
+      </a>
+    </div>
+    <form method="post" action="{% url 'logout' %}" class="inline">
+      {% csrf_token %}
+      <button type="submit" class="text-sm text-red-600 hover:underline font-medium">Sair</button>
+    </form>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Propriedades Rurais</h1>
+        <p class="text-sm text-slate-600 mt-1">
+          Cadastro e vínculo de propriedades aos produtores registrados.
+        </p>
+      </div>
+      <a href="{% url 'propriedade_create' %}" class="inline-flex items-center justify-center bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded hover:bg-slate-800">
+        Nova Propriedade
+      </a>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 shadow-xs overflow-x-auto">
+      {% if propriedades %}
+        <table class="w-full text-sm text-left">
+          <thead class="border-b border-slate-200 text-slate-500 bg-slate-50">
+            <tr>
+              <th class="py-3 px-4">Nome</th>
+              <th class="py-3 px-4">Município</th>
+              <th class="py-3 px-4">Produtor</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for prop in propriedades %}
+              <tr>
+                <td class="py-3 px-4 font-medium text-slate-900">{{ prop.nome }}</td>
+                <td class="py-3 px-4 text-slate-600">{{ prop.municipio }}</td>
+                <td class="py-3 px-4 text-slate-600">{{ prop.produtor.username }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="p-6 text-sm text-slate-500">Nenhuma propriedade cadastrada até o momento.</p>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

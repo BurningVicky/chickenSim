@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Cartório - Registro de Galinhas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div>
+      <span class="font-bold text-lg text-slate-900">Chicken Sim</span>
+      <span class="ml-2 text-xs uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+        Cartório
+      </span>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <span class="text-slate-600">Olá, <strong>{{ request.user.username }}</strong></span>
+      <form method="post" action="{% url 'logout' %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 hover:underline font-medium">Sair</button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+    <header>
+      <h1 class="text-2xl font-bold text-slate-900">Visão Geral do Cartório</h1>
+      <p class="text-slate-600 text-sm mt-1">
+        Acompanhamento de registros, propriedades e solicitações de transferência.
+      </p>
+    </header>
+
+    <!-- Indicadores principais -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-xs">
+        <p class="text-sm text-slate-500">Galinhas Registradas</p>
+        <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_animais }}</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-xs">
+        <p class="text-sm text-slate-500">Propriedades Cadastradas</p>
+        <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_propriedades }}</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-xs">
+        <p class="text-sm text-slate-500">Transferências Pendentes</p>
+        <p class="text-3xl font-bold text-amber-600 mt-1">{{ transferencias_pendentes }}</p>
+      </div>
+    </section>
+
+    <!-- Ações principais do perfil -->
+    <section class="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
+      <h2 class="text-lg font-semibold text-slate-900 mb-4">Operações do Cartório</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+          <p class="font-semibold text-slate-900">Galinhas e Certidões</p>
+          <p class="text-slate-500 mt-1">Cadastrar, buscar, ver histórico e emitir certidões.</p>
+        </a>
+        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+          <p class="font-semibold text-slate-900">Propriedades</p>
+          <p class="text-slate-500 mt-1">Vincular propriedades rurais aos produtores.</p>
+        </a>
+        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+          <p class="font-semibold text-slate-900">Transferências</p>
+          <p class="text-slate-500 mt-1">Aprovar ou rejeitar solicitações pendentes.</p>
+        </a>
+        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+          <p class="font-semibold text-slate-900">Raças</p>
+          <p class="text-slate-500 mt-1">Gerenciar raças cadastradas no sistema.</p>
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

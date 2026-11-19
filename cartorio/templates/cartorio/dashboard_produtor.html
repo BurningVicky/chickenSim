@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Produtor - Chicken Sim</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div>
+      <span class="font-bold text-lg text-slate-900">Chicken Sim</span>
+      <span class="ml-2 text-xs uppercase tracking-wide bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+        Produtor
+      </span>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <span class="text-slate-600">Olá, <strong>{{ request.user.username }}</strong></span>
+      <form method="post" action="{% url 'logout' %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 hover:underline font-medium">Sair</button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Minhas Propriedades e Galinhas</h1>
+        <p class="text-slate-600 text-sm mt-1">
+          Consulte seus registros e acompanhe suas solicitações de transferência.
+        </p>
+      </div>
+      <a href="#" class="inline-flex items-center justify-center bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded hover:bg-slate-800">
+        Solicitar transferência
+      </a>
+    </header>
+
+    <!-- Minhas Propriedades -->
+    <section class="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
+      <h2 class="text-lg font-semibold text-slate-900 mb-3">Minhas Propriedades</h2>
+      {% if propriedades %}
+        <ul class="divide-y divide-slate-100 text-sm">
+          {% for prop in propriedades %}
+            <li class="py-2.5 flex items-center justify-between">
+              <span class="font-medium text-slate-900">{{ prop.nome }}</span>
+              <span class="text-slate-500">{{ prop.municipio }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-sm text-slate-500">Nenhuma propriedade vinculada à sua conta ainda.</p>
+      {% endif %}
+    </section>
+
+    <!-- Minhas Galinhas -->
+    <section class="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
+      <h2 class="text-lg font-semibold text-slate-900 mb-3">Minhas Galinhas</h2>
+      {% if animais %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="border-b border-slate-200 text-slate-500">
+              <tr>
+                <th class="py-2 pr-4">Registro</th>
+                <th class="py-2 pr-4">Nome</th>
+                <th class="py-2 pr-4">Raça</th>
+                <th class="py-2">Propriedade Atual</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for animal in animais %}
+                <tr>
+                  <td class="py-2.5 pr-4 font-mono text-xs">{{ animal.numero_registro }}</td>
+                  <td class="py-2.5 pr-4 font-medium text-slate-900">{{ animal.nome }}</td>
+                  <td class="py-2.5 pr-4 text-slate-600">{{ animal.raca.nome }}</td>
+                  <td class="py-2.5 text-slate-600">{{ animal.propriedade_atual.nome }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-sm text-slate-500">Nenhuma galinha encontrada nas suas propriedades.</p>
+      {% endif %}
+    </section>
+
+    <!-- Minhas Transferências -->
+    <section class="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
+      <h2 class="text-lg font-semibold text-slate-900 mb-3">Minhas Solicitações de Transferência</h2>
+      {% if transferencias %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="border-b border-slate-200 text-slate-500">
+              <tr>
+                <th class="py-2 pr-4">Animal</th>
+                <th class="py-2 pr-4">Origem</th>
+                <th class="py-2 pr-4">Destino</th>
+                <th class="py-2 pr-4">Status</th>
+                <th class="py-2">Motivo (se rejeitada)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for transf in transferencias %}
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-900">{{ transf.animal.nome }}</td>
+                  <td class="py-2.5 pr-4 text-slate-600">{{ transf.propriedade_origem.nome }}</td>
+                  <td class="py-2.5 pr-4 text-slate-600">{{ transf.propriedade_destino.nome }}</td>
+                  <td class="py-2.5 pr-4 capitalize">{{ transf.get_status_display }}</td>
+                  <td class="py-2.5 text-slate-500">{{ transf.motivo_rejeicao|default:"—" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-sm text-slate-500">Você ainda não solicitou transferências.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>
