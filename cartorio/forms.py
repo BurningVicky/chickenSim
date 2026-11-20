@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 
 from .models import Propriedade, Animal, Transferencia, Raca
 
@@ -171,6 +172,11 @@ class TransferenciaCreateForm(forms.ModelForm):
                     'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm bg-white',
                 }
             ),
+            'propriedade_destino': forms.Select(
+                attrs={
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm bg-white',
+                }
+            ),
             'observacao': forms.Textarea(
                 attrs={
                     'rows': 3,
@@ -182,17 +188,19 @@ class TransferenciaCreateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
-        super() .__init__(*args, (kwargs))
+        super().__init__(*args, **kwargs)
         if self.user is not None:
             propriedades_produtor = Propriedade.objects.filter(produtor=self.user)
-            self.fields['animal'].queryset= (
+            self.fields['animal'].queryset = (
                 Animal.objects.filter(propriedade_atual__in=propriedades_produtor)
                 .select_related('propriedade_atual', 'raca')
                 .order_by('nome')
             )
-            self.fields['propriedade_destino'].queryset = Propriedade.objects.exclude(
-                produtor=self.user
-            ).select_related('produtor').order_by('nome')
+            self.fields['propriedade_destino'].queryset = (
+                Propriedade.objects.exclude(produtor=self.user)
+                .select_related('produtor')
+                .order_by('nome')
+            )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -299,6 +307,7 @@ class AnimalCartorioForm(forms.ModelForm):
         fields = [
             'numero_registro',
             'nome',
+            'nascimento',
             'raca',
             'propriedade_atual',
             'pai',
@@ -307,6 +316,7 @@ class AnimalCartorioForm(forms.ModelForm):
         labels = {
             'numero_registro': 'Número de Registro',
             'nome': 'Nome da Galinha',
+            'nascimento': 'Data de Nascimento',
             'raca': 'Raça',
             'propriedade_atual': 'Propriedade do Produtor',
             'pai': 'Pai (Progenitor)',
@@ -318,6 +328,11 @@ class AnimalCartorioForm(forms.ModelForm):
             ),
             'nome': forms.TextInput(
                 attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+            'nascimento': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
             ),
             'raca': forms.Select(
                 attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
@@ -339,3 +354,50 @@ class AnimalCartorioForm(forms.ModelForm):
             self.fields['propriedade_atual'].queryset = (
                 Propriedade.objects.select_related('produtor').order_by('nome')
             )
+
+class ProdutorCreateForm(UserCreationForm):
+    first_name = forms.CharField(
+        label='Nome',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm'}
+        ),
+    )
+    last_name = forms.CharField(
+        label='Sobrenome',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm'}
+        ),
+    )
+    email = forms.EmailField(
+        label='E-mail',
+        required=False,
+        widget=forms.EmailInput(
+            attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm'}
+        ),
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        widgets = {
+            'username': forms.TextInput(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm'}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ('password1', 'password2'):
+            if name in self.fields:
+                self.fields[name].widget.attrs.update(
+                    {'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm'}
+                )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_cartorio = False
+        if commit:
+            user.save()
+        return user

@@ -3,6 +3,7 @@ from django.urls import path
 from .views import(
     CartorioDashboardView,
     ProdutorDashboardView,
+    ProdutorCreateView,
     PropriedadeCreateView,
     PropriedadeListView,
     AnimalListView,
@@ -45,4 +46,5 @@ urlpatterns = [
     path('racas/nova/', RacaCreateView.as_view(), name='raca_create'),
     path('racas/<int:pk>/editar/', RacaUpdateView.as_view(), name='raca_update'),
     path('racas/<int:pk>/excluir/', RacaDeleteView.as_view(), name='raca_delete'),
+    path('cartorio/produtores/novo/', ProdutorCreateView.as_view(), name='cartorio_produtor_create'),
 ]

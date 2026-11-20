@@ -1,18 +1,20 @@
 from django.db.models import Q
 from django.db import transaction
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 from django.contrib import messages
-from django.shortcuts import render
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView, FormView, DeleteView
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
 
 from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin, LoginRequiredMixin
 from .models import Animal, Propriedade, Transferencia, Raca
-from .forms import PropriedadeForm, AnimalForm, TransferenciaCreateForm, TransferenciaDecisaoForm, AnimalCartorioForm, PropriedadeCartorioForm, RacaForm
+from .forms import PropriedadeForm, AnimalForm, TransferenciaCreateForm, TransferenciaDecisaoForm, AnimalCartorioForm, PropriedadeCartorioForm, RacaForm, ProdutorCreateForm
 
+User = get_user_model()
 
 @login_required
 def dashboard_router(request):
@@ -46,14 +48,6 @@ class ProdutorDashboardView(ProdutorRequiredMixin, TemplateView):
         context['animais'] = animais
         context['transferencias'] = transferencias
         return context
-
-class PropriedadeCreateView(CartorioRequiredMixin, ListView):
-    model = Propriedade
-    template_name = 'cartorio/propriedade_list.html'
-    context_object_name = 'propriedades'
-
-    def get_queryset(self):
-        return Propriedade.objects.select_related('produtor').order_by('nome')
 
 class PropriedadeListView(CartorioRequiredMixin, ListView):
     model = Propriedade
@@ -128,17 +122,16 @@ class TransferenciaCreateView(ProdutorRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
-        transferencia = form.save(commit=False)
-        transferencia.propriedade_origem = transferencia.animal.propriedade_atual
-        transferencia.solicitante = self.request.user
-        transferencia.status = 'pendente'
-        transferencia.save()
+        self.object = form.save(commit=False)
+        self.object.propriedade_origem = self.object.animal.propriedade_atual
+        self.object.solicitante = self.request.user
+        self.object.status = 'pendente'
+        self.object.save()
         messages.success(
             self.request,
-            f'Solicitação de transferência de "{transferencia.animal.nome}" enviada para análise do cartório.',
+            f'Solicitação de transferência de "{self.object.animal.nome}" enviada para análise do cartório.',
         )
-        return super().form_valid(form)
-
+        return HttpResponseRedirect(self.get_success_url())
 
 class TransferenciaPendenteListView(CartorioRequiredMixin, ListView):
     model = Transferencia
@@ -312,7 +305,7 @@ class RacaUpdateView(CartorioRequiredMixin, UpdateView):
 
 class RacaDeleteView(CartorioRequiredMixin, DeleteView):
     model = Raca
-    template_name = 'cartorio/raca_fonfirm_delete.html'
+    template_name = 'cartorio/raca_confirm_delete.html'
     success_url = reverse_lazy('raca_list')
 
     def form_valid(self, form):
@@ -326,7 +319,7 @@ class PropriedadeCartorioCreateView(CartorioRequiredMixin, CreateView):
     success_url = reverse_lazy('propriedade_list')
 
     def form_valid(self, form):
-        messages.success(self.request, f'Propriedade "{form.instance.nome} cadastrada para o produtor.',)
+        messages.success(self.request, f'Propriedade "{form.instance.nome}" cadastrada para o produtor.',)
         return super().form_valid(form)
 
 class AnimalCartorioCreateView(CartorioRequiredMixin, CreateView):
@@ -336,5 +329,19 @@ class AnimalCartorioCreateView(CartorioRequiredMixin, CreateView):
     success_url = reverse_lazy('animal_list')
 
     def form_valid(self, form):
-        messages.success(self.request, f'Galinha "{form.instance.nome} ({form.instance.numero_registro}) cadastrada com sucesso.',)
+        messages.success(self.request, f'Galinha "{form.instance.nome} ({form.instance.numero_registro})" cadastrada com sucesso.',)
         return super().form_valid(form)
+
+class ProdutorCreateView(CartorioRequiredMixin, CreateView):
+    model = User
+    form_class = ProdutorCreateForm
+    template_name = 'cartorio/produtor_form.html'
+    success_url = reverse_lazy('cartorio_dashboard')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            f'Produtor "{self.object.username}" cadastrado com sucesso.',
+        )
+        return response
