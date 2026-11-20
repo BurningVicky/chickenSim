@@ -14,6 +14,12 @@ from .views import(
     TransferenciaPendenteListView,
     TransferenciaDecidirView,
     TransferenciaHistoricoListView,
+    PropriedadeCartorioCreateView,
+    AnimalCartorioCreateView,
+    RacaListView,
+    RacaCreateView,
+    RacaUpdateView,
+    RacaDeleteView,
     dashboard_router,
 )
 
@@ -33,4 +39,10 @@ urlpatterns = [
     path('transferencias/<int:pk>/decidir/', TransferenciaDecidirView.as_view(), name='transferencia_decidir'),
     path('transferencias/historico/', TransferenciaHistoricoListView.as_view(), name='transferencia_historico'),
     path('galinhas/<int:pk>/certidao/', AnimalCertidaoDetailView.as_view(), name='animal_certidao',),
+    path('cartorio/propriedades/nova/', PropriedadeCartorioCreateView.as_view(), name='cartorio_propriedade_create'),
+    path('cartorio/galinhas/nova/', AnimalCartorioCreateView.as_view(), name='cartorio_animal_create'),
+    path('racas/', RacaListView.as_view(), name='raca_list'),
+    path('racas/nova/', RacaCreateView.as_view(), name='raca_create'),
+    path('racas/<int:pk>/editar/', RacaUpdateView.as_view(), name='raca_update'),
+    path('racas/<int:pk>/excluir/', RacaDeleteView.as_view(), name='raca_delete'),
 ]

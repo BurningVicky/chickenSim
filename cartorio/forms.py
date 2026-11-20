@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import get_user_model
 
-from .models import Propriedade, Animal, Transferencia
+from .models import Propriedade, Animal, Transferencia, Raca
 
 
-Usuario = get_user_model()
+User = get_user_model()
 
 
 class PropriedadeForm(forms.ModelForm):
@@ -38,7 +38,7 @@ class PropriedadeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['produtor'].queryset = Usuario.objects.filter(
+        self.fields['produtor'].queryset = User.objects.filter(
             is_cartorio=False).order_by('username')
 
 
@@ -134,14 +134,15 @@ class AnimalForm(forms.ModelForm):
         self.fields['mae'].queryset = animais_qs.filter(sexo='F')
 
     def clean_numero_registro(self):
-        numero = self.cleaned_data.get['numero_registro'].strip()
-        qs = Animal.objects.filter(numero_registro__iecaxt=numero)
+        numero = (self.cleaned_data.get('numero_registro') or '').strip()
+        if not numero:
+            raise forms.ValidationError('Informe o número de registro.')
+
+        qs = Animal.objects.filter(numero_registro__iexact=numero)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
-            raise forms.ValidationError(
-                'Já existe uma galinha cadastrada com este número de registro.'
-            )
+            raise forms.ValidationError('Já existe uma galinha cadastrada com este número de registro.')
         return numero
 
     def clean(self):
@@ -247,3 +248,94 @@ class TransferenciaDecisaoForm(forms.Form):
             )
         cleaned_data['motivo_rejeicao'] = motivo
         return cleaned_data
+
+class RacaForm(forms.ModelForm):
+    class Meta:
+        model = Raca
+        fields = ['nome']
+        labels = {
+            'nome': 'Nome da Raça',
+        }
+        widgets = {
+            'nome': forms.TextInput(
+                attrs={
+                    'placeholder': 'Ex. Rhode Island Red, Brahma...',
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',
+                }
+            ),
+        }
+
+class PropriedadeCartorioForm(forms.ModelForm):
+    class Meta:
+        model = Propriedade
+        fields = ['nome', 'municipio', 'produtor']
+        labels = {
+            'nome': 'Nome da Propriedade',
+            'municipio': 'Município',
+            'produtor': 'Produtor Responsável',
+        }
+        widgets = {
+            'nome': forms.TextInput(
+                attrs={
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',
+                }
+            ),
+            'municipio': forms.TextInput(
+                attrs={
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',
+                }
+            ),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'produtor' in self.fields:
+            self.fields['produtor'].queryset = User.objects.filter(
+                is_cartorio=False
+            ).order_by('username')
+
+class AnimalCartorioForm(forms.ModelForm):
+    class Meta:
+        model = Animal
+        fields = [
+            'numero_registro',
+            'nome',
+            'raca',
+            'propriedade_atual',
+            'pai',
+            'mae',
+        ]
+        labels = {
+            'numero_registro': 'Número de Registro',
+            'nome': 'Nome da Galinha',
+            'raca': 'Raça',
+            'propriedade_atual': 'Propriedade do Produtor',
+            'pai': 'Pai (Progenitor)',
+            'mae': 'Mãe (Progenitora)',
+        }
+        widgets = {
+            'numero+registro': forms.TextInput(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+            'nome': forms.TextInput(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+            'raca': forms.Select(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+            'propriedade_atual': forms.Select(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+            'pai': forms.Select(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+            'mae': forms.Select(
+                attrs={'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm',}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'propriedade_atual' in self.fields:
+            self.fields['propriedade_atual'].queryset = (
+                Propriedade.objects.select_related('produtor').order_by('nome')
+            )

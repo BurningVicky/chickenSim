@@ -4,14 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render
 from django.shortcuts import redirect
-from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView, FormView
+from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView, FormView, DeleteView
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 
 from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin, LoginRequiredMixin
-from .models import Animal, Propriedade, Transferencia
-from .forms import PropriedadeForm, AnimalForm, TransferenciaCreateForm, TransferenciaDecisaoForm
+from .models import Animal, Propriedade, Transferencia, Raca
+from .forms import PropriedadeForm, AnimalForm, TransferenciaCreateForm, TransferenciaDecisaoForm, AnimalCartorioForm, PropriedadeCartorioForm, RacaForm
 
 
 @login_required
@@ -27,7 +27,10 @@ class CartorioDashboardView(CartorioRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['total_animais'] = Animal.objects.count()
         context['total_propriedades'] = Propriedade.objects.count()
+        context['total_racas'] = Raca.objects.count()
         context['transferencias_pendentes'] = Transferencia.objects.filter(status='pendente').count()
+        context['total_transferencias_pendentes'] = Transferencia.objects.filter(status='pendente')
+        context['total_transferencias_aprovadas'] = Transferencia.objects.filter(status='aprovada')
         return context
 
 class ProdutorDashboardView(ProdutorRequiredMixin, TemplateView):
@@ -64,7 +67,7 @@ class PropriedadeCreateView(CartorioRequiredMixin, CreateView):
     model = Propriedade
     form_class = PropriedadeForm
     template_name = 'cartorio/propriedade_form.html'
-    sucess_url = reverse_lazy('propriedade_list')
+    success_url = reverse_lazy('propriedade_list')
 
 
 class AnimalListView(CartorioRequiredMixin, ListView):
@@ -83,7 +86,7 @@ class AnimalListView(CartorioRequiredMixin, ListView):
             )
         return qs
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(kwargs)
+        context = super().get_context_data(**kwargs)
         context['busca'] = self.request.GET.get('q', '').strip()
         return context
 
@@ -91,7 +94,7 @@ class AnimalCreateView(CartorioRequiredMixin, CreateView):
     model = Animal
     form_class = AnimalForm
     template_name = 'cartorio/animal_form.html'
-    sucess_url = reverse_lazy('animal_list')
+    success_url = reverse_lazy('animal_list')
 
 class AnimalDetailView(CartorioRequiredMixin, DetailView):
     model = Animal
@@ -111,7 +114,7 @@ class AnimalUpdateView(CartorioRequiredMixin, UpdateView):
     model = Animal
     form_class = AnimalForm
     template_name = 'cartorio/animal_form.html'
-    sucess_url = reverse_lazy('animal_list')
+    success_url = reverse_lazy('animal_list')
 
 class TransferenciaCreateView(ProdutorRequiredMixin, CreateView):
     model = Transferencia
@@ -278,3 +281,60 @@ class AnimalCertidaoDetailView(LoginRequiredMixin, DetailView):
             .order_by('data_decisao', 'data_solicitacao', 'pk')
         )
         return context
+
+class RacaListView(CartorioRequiredMixin, ListView):
+    model = Raca
+    template_name = 'cartorio/raca_list.html'
+    context_object_name = 'racas'
+
+    def get_queryset(self):
+        return Raca.objects.order_by('nome')
+
+class RacaCreateView(CartorioRequiredMixin, CreateView):
+    model = Raca
+    form_class = RacaForm
+    template_name = 'cartorio/raca_form.html'
+    success_url = reverse_lazy('raca_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Raça "{form.instance.nome}" cadastrada com sucesso.')
+        return super().form_valid(form)
+
+class RacaUpdateView(CartorioRequiredMixin, UpdateView):
+    model = Raca
+    form_class = RacaForm
+    template_name = 'cartorio/raca_form.html'
+    success_url = reverse_lazy('raca_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Raça "{form.instance.nome}" atualizada com sucesso.',)
+        return super().form_valid(form)
+
+class RacaDeleteView(CartorioRequiredMixin, DeleteView):
+    model = Raca
+    template_name = 'cartorio/raca_fonfirm_delete.html'
+    success_url = reverse_lazy('raca_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Raça "{self.object.nome}" removida.')
+        return super().form_valid(form)
+
+class PropriedadeCartorioCreateView(CartorioRequiredMixin, CreateView):
+    model = Propriedade
+    form_class = PropriedadeCartorioForm
+    template_name = 'cartorio/propriedade_form.html'
+    success_url = reverse_lazy('propriedade_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Propriedade "{form.instance.nome} cadastrada para o produtor.',)
+        return super().form_valid(form)
+
+class AnimalCartorioCreateView(CartorioRequiredMixin, CreateView):
+    model = Animal
+    form_class = AnimalCartorioForm
+    template_name = 'cartorio/animal_form.html'
+    success_url = reverse_lazy('animal_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Galinha "{form.instance.nome} ({form.instance.numero_registro}) cadastrada com sucesso.',)
+        return super().form_valid(form)

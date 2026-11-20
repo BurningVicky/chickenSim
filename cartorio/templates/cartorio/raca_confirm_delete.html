@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excluir Raça - Chicken Sim</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-md w-full bg-white p-6 rounded-lg border border-slate-200 shadow-xs space-y-4">
+    <h1 class="text-lg font-bold text-slate-900">Confirmar Exclusão</h1>
+    <p class="text-sm text-slate-600">
+      Tem certeza que deseja excluir a raça <strong>{{ object.nome }}</strong>? Se houver galinhas vinculadas, a exclusão pode ser bloqueada pelo banco.
+    </p>
+    <form method="post" class="flex justify-end gap-3 pt-2">
+      {% csrf_token %}
+      <a href="{% url 'raca_list' %}" class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900">Cancelar</a>
+      <button type="submit" class="bg-red-600 text-white text-sm font-medium px-4 py-2 rounded hover:bg-red-700">
+        Excluir
+      </button>
+    </form>
+  </div>
+</body>
+</html>
