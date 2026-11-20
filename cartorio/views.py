@@ -151,7 +151,7 @@ class TransferenciaPendenteListView(CartorioRequiredMixin, ListView):
                 'propriedade_destino',
                 'solicitante',
             )
-            .order_by('created_at')
+            .order_by('data_solicitacao')
         )
 
 
@@ -238,7 +238,7 @@ class TransferenciaHistoricoListView(LoginRequiredMixin, ListView):
                 Q(propriedade_origem__produtor=user)
                 | Q(propriedade_destino__produtor=user)
             )
-        return qs.order_by('-data_decisao', '-created_at', '-pk')
+        return qs.order_by('-data_decisao', '-data_solicitacao', '-pk')
 
 class AnimalCertidaoDetailView(LoginRequiredMixin, DetailView):
     model = Animal
@@ -275,6 +275,6 @@ class AnimalCertidaoDetailView(LoginRequiredMixin, DetailView):
                 'propriedade_destino__produtor',
                 'solicitante',
             )
-            .order_by('data_decisao', 'created_at', 'pk')
+            .order_by('data_decisao', 'data_solicitacao', 'pk')
         )
         return context
