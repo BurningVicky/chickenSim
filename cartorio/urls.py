@@ -10,6 +10,9 @@ from .views import(
     AnimalDetailView,
     AnimalUpdateView,
     dashboard_router,
+    TransferenciaCreateView,
+    TransferenciaPendenteListView,
+    TransferenciaDecidirView,
 )
 
 urlpatterns = [
@@ -23,5 +26,8 @@ urlpatterns = [
     path('galinhas/nova/', AnimalCreateView.as_view(), name='animal_create'),
     path('galinhas/<int:pk>/', AnimalDetailView.as_view(), name='animal_detail'),
     path('galinhas/<int:pk>/editar/', AnimalUpdateView.as_view(), name='animal_update'),
+    path('transferencias/nova/', TransferenciaCreateView.as_view(), name='transferencia_create'),
+    path('transferencias/pendentes/', TransferenciaPendenteListView.as_view(), name='transferencia_pendentes'),
+    path('transferencias/<int:pk>/decidir/', TransferenciaDecidirView.as_view(), name='transferencia_decidir'),
 ]
 

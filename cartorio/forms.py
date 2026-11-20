@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import get_user_model
 
-from .models import Propriedade, Animal
+from .models import Propriedade, Animal, Transferencia
 
 
 Usuario = get_user_model()
@@ -155,3 +155,95 @@ class AnimalForm(forms.ModelForm):
                 self.add_error('mae', 'A mãe não pode ser o próprio animal.')
         return cleaned_data
 
+class TransferenciaCreateForm(forms.ModelForm):
+    class Meta:
+        model = Transferencia
+        fields = ['animal', 'propriedade_destino', 'observacao']
+        labels = {
+            'animal': 'Galinha',
+            'propriedade_destino': 'Propriedade de Destino',
+            'observacao': 'Observação (Opcional)',
+        }
+        widgets = {
+            'animal': forms.Select(
+                attrs={
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm bg-white',
+                }
+            ),
+            'observacao': forms.Textarea(
+                attrs={
+                    'rows': 3,
+                    'placeholder': 'Detalhes da transferência, se necessário.',
+                    'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm bg-white',
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super() .__init__(*args, (kwargs))
+        if self.user is not None:
+            propriedades_produtor = Propriedade.objects.filter(produtor=self.user)
+            self.fields['animal'].queryset= (
+                Animal.objects.filter(propriedade_atual__in=propriedades_produtor)
+                .select_related('propriedade_atual', 'raca')
+                .order_by('nome')
+            )
+            self.fields['propriedade_destino'].queryset = Propriedade.objects.exclude(
+                produtor=self.user
+            ).select_related('produtor').order_by('nome')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        animal = cleaned_data.get('animal')
+        destino = cleaned_data.get('propriedade_destino')
+
+        if animal and destino:
+            origem = animal.propriedade_atual
+            if origem and origem.pk == destino.pk:
+                self.add_error(
+                    'propriedade_destino',
+                    'A propriedade de destino deve ser diferente da propriedade de origem.',
+                )
+            if self.user and origem and origem.produtor_id != self.user.pk:
+                self.add_error(
+                    'animal',
+                    'Você só pode solicitar transferência de galinhas em propriedades vinculadas à sua conta.',
+                )
+        return cleaned_data
+
+class TransferenciaDecisaoForm(forms.Form):
+    DECISAO_CHOICES = [
+        ('aprovada', 'Aprovar transferência'),
+        ('rejeitada', 'Rejeitar transferência'),
+    ]
+
+    decisao = forms.ChoiceField(
+        label='Decisão do Cartório',
+        choices=DECISAO_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'text-slate-900'}),
+    )
+    motivo_rejeicao = forms.CharField(
+        label='Motivo da Rejeição',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'rows': 3,
+                'placeholder': 'Obrigatório quando a transferência for rejeitada.',
+                'class': 'w-full rounded border border-slate-300 px-3 py-2 text-sm bg-white',
+            }
+        ),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        decisao = cleaned_data.get('decisao')
+        motivo = (cleaned_data.get('motivo_rejeicao') or '').strip()
+
+        if decisao == 'rejeitada' and not motivo:
+            self.adderror(
+                'motivo_rejeicao',
+                'Informe o motivo da rejeição para reprovar a transferência.',
+            )
+        cleaned_data['motivo_rejeicao'] = motivo
+        return cleaned_data

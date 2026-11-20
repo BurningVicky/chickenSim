@@ -1,18 +1,16 @@
 from django.db.models import Q
-
+from django.db import transaction
 from django.contrib.auth.decorators import login_required
-
+from django.contrib import messages
 from django.shortcuts import render
 from django.shortcuts import redirect
-
-from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView
+from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView, FormView
+from django.urls import reverse_lazy
+from django.utils import timezone
 
 from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin
 from .models import Animal, Propriedade, Transferencia
-
-from .forms import PropriedadeForm, AnimalForm
-
-from django.urls import reverse_lazy
+from .forms import PropriedadeForm, AnimalForm, TransferenciaCreateForm, TransferenciaDecisaoForm
 
 
 @login_required
@@ -113,3 +111,108 @@ class AnimalUpdateView(CartorioRequiredMixin, UpdateView):
     form_class = AnimalForm
     template_name = 'cartorio/animal_form.html'
     sucess_url = reverse_lazy('animal_list')
+
+class TransferenciaCreateView(ProdutorRequiredMixin, CreateView):
+    model = Transferencia
+    form_class = TransferenciaCreateForm
+    template_name = 'cartorio/transferencia_form.html'
+    success_url = reverse_lazy('produtor_dashboard')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        transferencia = form.save(commit=False)
+        transferencia.propriedade_origem = transferencia.animal.propriedade_atual
+        transferencia.solicitante = self.request.user
+        transferencia.status = 'pendente'
+        transferencia.save()
+        messages.success(
+            self.request,
+            f'Solicitação de transferência de "{transferencia.animal.nome}" enviada para análise do cartório.',
+        )
+        return super().form_valid(form)
+
+
+class TransferenciaPendenteListView(CartorioRequiredMixin, ListView):
+    model = Transferencia
+    template_name = 'cartorio/transferencia_pendente_list.html'
+    context_object_name = 'transferencias'
+
+    def get_queryset(self):
+        return (
+            Transferencia.objects.filter(status='pendente')
+            .select_related(
+                'animal',
+                'propriedade_origem',
+                'propriedade_destino',
+                'solicitante',
+            )
+            .order_by('created_at')
+        )
+
+
+class TransferenciaDecidirView(CartorioRequiredMixin, FormView):
+    form_class = TransferenciaDecisaoForm
+    template_name = 'cartorio/transferencia_decidir.html'
+    success_url = reverse_lazy('transferencia_pendentes')
+
+    def dispatch(self, request, *args, **kwargs):
+        self.transferencia = get_object_or_404(
+            Transferencia.objects.select_related(
+                'animal',
+                'propriedade_origem',
+                'propriedade_destino',
+                'solicitante',
+            ),
+            pk=kwargs['pk'],
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['transferencia'] = self.transferencia
+        return context
+
+    def form_valid(self, form):
+        if self.transferencia.status != 'pendente':
+            messages.warning(
+                self.request,
+                'Esta transferência já foi avaliada anteriormente.',
+            )
+            return redirect(self.success_url)
+
+        decisao = form.cleaned_data['decisao']
+        motivo = form.cleaned_data['motivo_rejeicao']
+
+        with transaction.atomic():
+            if decisao == 'aprovada':
+                animal = self.transferencia.animal
+                animal.propriedade_atual = self.transferencia.propriedade_destino
+                animal.save(update_fields=['propriedade_atual'])
+
+                self.transferencia.status = 'aprovada'
+                self.transferencia.motivo_rejeicao = ''
+                self.transferencia.data_decisao = timezone.now()
+                self.transferencia.save(
+                    update_fields=['status', 'motivo_rejeicao', 'data_decisao']
+                )
+                messages.success(
+                    self.request,
+                    f'Transferência de "{animal.nome}" aprovada! Propriedade atualizada para {self.transferencia.propriedade_destino.nome}.',
+                )
+            else:
+                self.transferencia.status = 'rejeitada'
+                self.transferencia.motivo_rejeicao = motivo
+                self.transferencia.data_decisao = timezone.now()
+                self.transferencia.save(
+                    update_fields=['status', 'motivo_rejeicao', 'data_decisao']
+                )
+                messages.info(
+                    self.request,
+                    f'Transferência de "{self.transferencia.animal.nome}" rejeitada.',
+                )
+
+        return super().form_valid(form)

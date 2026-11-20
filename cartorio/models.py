@@ -93,6 +93,7 @@ class Transferencia(models.Model):
         max_length=20, choices=STATUS_TRANSF, default='pendente'
     )
     motivo_rejeicao = models.TextField(blank=True, null=True)
+    observacao = models.TextField(blank=True, default='')
 
     data_solicitacao = models.DateTimeField(auto_now_add=True)
     data_decisao = models.DateTimeField(blank=True, null=True)
