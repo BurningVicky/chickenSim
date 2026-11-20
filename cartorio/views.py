@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView, CreateView, ListView, DetailView, UpdateView, FormView
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 
 from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin, LoginRequiredMixin
 from .models import Animal, Propriedade, Transferencia
@@ -238,3 +239,42 @@ class TransferenciaHistoricoListView(LoginRequiredMixin, ListView):
                 | Q(propriedade_destino__produtor=user)
             )
         return qs.order_by('-data_decisao', '-created_at', '-pk')
+
+class AnimalCertidaoDetailView(LoginRequiredMixin, DetailView):
+    model = Animal
+    template_name = 'cartorio/animal_certidao.html'
+    context_object_name = 'animal'
+
+    def get_queryset(self):
+        return Animal.objects.select_related(
+            'raca',
+            'propriedade_atual',
+            'propriedade_atual__produtor',
+            'pai',
+            'mae',
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        animal = self.get_object()
+        if not getattr(request.user, 'is_cartorio', False):
+            produtor_id = getattr(animal.propriedade_atual, 'produtor_id', None)
+            if produtor_id != request.user.pk:
+                raise PermissionDenied(
+                    'Você não tem permissão para emitir a certidão desta galinha.'
+                )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['historico_transferencias'] = (
+            Transferencia.objects.filter(animal=self.object, status='aprovada')
+            .select_related(
+                'propriedade_origem',
+                'propriedade_origem__produtor',
+                'propriedade_destino',
+                'propriedade_destino__produtor',
+                'solicitante',
+            )
+            .order_by('data_decisao', 'created_at', 'pk')
+        )
+        return context

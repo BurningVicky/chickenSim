@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certidão de Registro - {{ animal.nome }} - Chicken Sim</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen print:bg-white">
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between print:hidden">
+    <div class="flex items-center gap-4">
+      {% if request.user.is_cartorio %}
+        <a href="{% url 'cartorio_dashboard' %}" class="font-bold text-lg text-slate-900">Chicken Sim</a>
+        <span class="text-slate-300">|</span>
+        <a href="{% url 'animal_list' %}" class="text-sm text-slate-600 hover:text-slate-900">Galinhas</a>
+        <a href="{% url 'transferencia_historico' %}" class="text-sm text-slate-600 hover:text-slate-900">Histórico Aprovado</a>
+      {% else %}
+        <a href="{% url 'produtor_dashboard' %}" class="font-bold text-lg text-slate-900">Chicken Sim</a>
+        <span class="text-slate-300">|</span>
+        <a href="{% url 'produtor_dashboard' %}" class="text-sm text-slate-600 hover:text-slate-900">Meu Painel</a>
+        <a href="{% url 'transferencia_historico' %}" class="text-sm text-slate-600 hover:text-slate-900">Histórico Aprovado</a>
+      {% endif %}
+    </div>
+    <button
+      type="button"
+      onclick="window.print()"
+      class="bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded hover:bg-slate-800"
+    >
+      Imprimir / Salvar PDF
+    </button>
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-6 py-8 print:py-2 print:px-0">
+    <section class="bg-white p-8 rounded-lg border border-slate-200 shadow-xs space-y-6 print:border print:border-slate-300 print:shadow-none">
+      <header class="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+            Chicken Sim &bull; Registro Oficial de Aves
+          </p>
+          <h1 class="text-2xl font-bold text-slate-900 mt-1">
+            Certidão de Registro Individual
+          </h1>
+        </div>
+        <div class="sm:text-right">
+          <span class="text-xs text-slate-500 block">Número de Registro</span>
+          <span class="font-mono text-base font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded">
+            {{ animal.numero_registro }}
+          </span>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        <div>
+          <span class="text-slate-500 block">Nome da Galinha</span>
+          <strong class="text-slate-900">{{ animal.nome }}</strong>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Raça</span>
+          <strong class="text-slate-900">{{ animal.raca|default:"Não informada" }}</strong>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Propriedade Atual</span>
+          <strong class="text-slate-900">
+            {{ animal.propriedade_atual.nome }} ({{ animal.propriedade_atual.municipio }})
+          </strong>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Produtor Responsável Atual</span>
+          <strong class="text-slate-900">
+            {{ animal.propriedade_atual.produtor.get_full_name|default:animal.propriedade_atual.produtor.username }}
+          </strong>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Progenitor Masculino (Pai)</span>
+          <strong class="text-slate-900">
+            {% if animal.pai %}
+              {{ animal.pai.nome }} <span class="font-mono text-xs text-slate-500">({{ animal.pai.numero_registro }})</span>
+            {% else %}
+              Não registrado
+            {% endif %}
+          </strong>
+        </div>
+        <div>
+          <span class="text-slate-500 block">Progenitora Feminina (Mãe)</span>
+          <strong class="text-slate-900">
+            {% if animal.mae %}
+              {{ animal.mae.nome }} <span class="font-mono text-xs text-slate-500">({{ animal.mae.numero_registro }})</span>
+            {% else %}
+              Não registrada
+            {% endif %}
+          </strong>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-200 space-y-3">
+        <h2 class="text-base font-bold text-slate-900">
+          Histórico Cronológico de Transferências Aprovadas
+        </h2>
+
+        {% if historico_transferencias %}
+          <ol class="divide-y divide-slate-100 border border-slate-200 rounded-md text-sm">
+            {% for transf in historico_transferencias %}
+              <li class="p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <span class="font-medium text-slate-900">{{ transf.propriedade_origem.nome }}</span>
+                  <span class="mx-1.5 text-slate-400">&rarr;</span>
+                  <span class="font-medium text-slate-900">{{ transf.propriedade_destino.nome }}</span>
+                  <span class="block text-xs text-slate-500">
+                    Destino em {{ transf.propriedade_destino.municipio }} &bull; Solicitante: {{ transf.solicitante.username }}
+                  </span>
+                </div>
+                <span class="text-xs text-slate-600 font-mono">
+                  {{ transf.data_decisao|date:"d/m/Y H:i" }}
+                </span>
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p class="text-sm text-slate-500">
+            Nenhuma transferência aprovada registrada para este animal até o momento.
+          </p>
+        {% endif %}
+      </div>
+
+      <footer class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Emitido em {% now "d/m/Y \à\s H:i" %}</span>
+        <span>Emitido por {{ request.user.username }}</span>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>

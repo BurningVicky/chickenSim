@@ -9,6 +9,7 @@ from .views import(
     AnimalCreateView,
     AnimalDetailView,
     AnimalUpdateView,
+    AnimalCertidaoDetailView,
     TransferenciaCreateView,
     TransferenciaPendenteListView,
     TransferenciaDecidirView,
@@ -31,4 +32,5 @@ urlpatterns = [
     path('transferencias/pendentes/', TransferenciaPendenteListView.as_view(), name='transferencia_pendentes'),
     path('transferencias/<int:pk>/decidir/', TransferenciaDecidirView.as_view(), name='transferencia_decidir'),
     path('transferencias/historico/', TransferenciaHistoricoListView.as_view(), name='transferencia_historico'),
+    path('galinhas/<int:pk>/certidao/', AnimalCertidaoDetailView.as_view(), name='animal_certidao',),
 ]
