@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Transferências Aprovadas - Chicken Sim</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <nav class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      {% if request.user.is_cartorio %}
+        <a href="{% url 'cartorio_dashboard' %}" class="font-bold text-lg text-slate-900">Chicken Sim</a>
+        <span class="text-slate-300">|</span>
+        <a href="{% url 'animal_list' %}" class="text-sm text-slate-600 hover:text-slate-900">Galinhas</a>
+        <a href="{% url 'propriedade_list' %}" class="text-sm text-slate-600 hover:text-slate-900">Propriedades</a>
+        <a href="{% url 'transferencia_pendentes' %}" class="text-sm text-slate-600 hover:text-slate-900">Pendentes</a>
+      {% else %}
+        <a href="{% url 'produtor_dashboard' %}" class="font-bold text-lg text-slate-900">Chicken Sim</a>
+        <span class="text-slate-300">|</span>
+        <a href="{% url 'produtor_dashboard' %}" class="text-sm text-slate-600 hover:text-slate-900">Meu Painel</a>
+      {% endif %}
+      <a href="{% url 'transferencia_historico' %}" class="text-sm font-medium text-slate-900">
+        Histórico Aprovado
+      </a>
+    </div>
+    <form method="post" action="{% url 'logout' %}" class="inline">
+      {% csrf_token %}
+      <button type="submit" class="text-sm text-red-600 hover:underline font-medium">Sair</button>
+    </form>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Histórico Cronológico de Transferências Aprovadas</h1>
+      <p class="text-sm text-slate-600 mt-1">
+        Registro oficial das movimentações de propriedade validadas pelo cartório.
+      </p>
+    </div>
+
+    {% if transferencias %}
+      <div class="bg-white rounded-lg border border-slate-200 shadow-xs divide-y divide-slate-100">
+        {% for item in transferencias %}
+          <article class="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-slate-900">{{ item.animal.nome }}</span>
+                <span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+                  {{ item.animal.numero_registro }}
+                </span>
+                <span class="text-xs font-medium bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+                  Aprovada
+                </span>
+              </div>
+              <p class="text-sm text-slate-700">
+                <strong>{{ item.propriedade_origem.nome }}</strong> ({{ item.propriedade_origem.municipio }})
+                <span class="mx-1.5 text-slate-400">&rarr;</span>
+                <strong>{{ item.propriedade_destino.nome }}</strong> ({{ item.propriedade_destino.municipio }})
+              </p>
+              {% if item.observacao %}
+                <p class="text-xs text-slate-500">Obs.: {{ item.observacao }}</p>
+              {% endif %}
+            </div>
+
+            <div class="text-xs text-slate-500 sm:text-right shrink-0">
+              <p class="font-medium text-slate-700">
+                {{ item.data_decisao|date:"d/m/Y H:i" }}
+              </p>
+              <p>Solicitante: {{ item.solicitante.username }}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-xs text-sm text-slate-500">
+        Nenhuma transferência aprovada registrada até o momento.
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>

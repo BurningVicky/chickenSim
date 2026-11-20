@@ -8,7 +8,7 @@ from django.views.generic import TemplateView, CreateView, ListView, DetailView,
 from django.urls import reverse_lazy
 from django.utils import timezone
 
-from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin
+from .mixins import CartorioRequiredMixin, ProdutorRequiredMixin, LoginRequiredMixin
 from .models import Animal, Propriedade, Transferencia
 from .forms import PropriedadeForm, AnimalForm, TransferenciaCreateForm, TransferenciaDecisaoForm
 
@@ -216,3 +216,25 @@ class TransferenciaDecidirView(CartorioRequiredMixin, FormView):
                 )
 
         return super().form_valid(form)
+
+class TransferenciaHistoricoListView(LoginRequiredMixin, ListView):
+    model = Transferencia
+    template_name = 'cartorio/transferencia_historico_list.html'
+    context_object_name = 'transferencias'
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Transferencia.objects.filter(status='aprovada').select_related(
+            'animal',
+            'propriedade_origem',
+            'propriedade_origem__produtor',
+            'propriedade_destino',
+            'propriedade_destino__produtor',
+            'solicitante',
+        )
+        if not getattr(user, 'is_cartorio', False):
+            qs = qs.filter(
+                Q(propriedade_origem__produtor=user)
+                | Q(propriedade_destino__produtor=user)
+            )
+        return qs.order_by('-data_decisao', '-created_at', '-pk')
