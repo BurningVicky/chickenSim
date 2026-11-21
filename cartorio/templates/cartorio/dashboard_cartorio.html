@@ -24,11 +24,24 @@
   </nav>
 
   <main class="max-w-6xl mx-auto px-6 py-8 space-y-8">
-    <header>
-      <h1 class="text-2xl font-bold text-slate-900">Visão Geral do Cartório</h1>
-      <p class="text-slate-600 text-sm mt-1">
-        Acompanhamento de registros, propriedades e solicitações de transferência.
-      </p>
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Visão Geral do Cartório</h1>
+        <p class="text-slate-600 text-sm mt-1">
+          Acompanhamento de registros, propriedades e solicitações de transferência.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'cartorio_produtor_create' %}" class="bg-white text-slate-700 border border-slate-300 text-sm font-medium px-4 py-2 rounded hover:bg-slate-50">
+          + Produtor
+        </a>
+        <a href="{% url 'cartorio_propriedade_create' %}" class="bg-white text-slate-700 border border-slate-300 text-sm font-medium px-4 py-2 rounded hover:bg-slate-50">
+          + Propriedade
+        </a>
+        <a href="{% url 'cartorio_animal_create' %}" class="bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded hover:bg-slate-800">
+          + Galinha
+        </a>
+      </div>
     </header>
 
     <!-- Indicadores principais -->
@@ -53,19 +66,24 @@
     <section class="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
       <h2 class="text-lg font-semibold text-slate-900 mb-4">Operações do Cartório</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+        <a href="{% url 'animal_list' %}" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
           <p class="font-semibold text-slate-900">Galinhas e Certidões</p>
           <p class="text-slate-500 mt-1">Cadastrar, buscar, ver histórico e emitir certidões.</p>
         </a>
-        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+        <a href="{% url 'propriedade_list' %}" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
           <p class="font-semibold text-slate-900">Propriedades</p>
           <p class="text-slate-500 mt-1">Vincular propriedades rurais aos produtores.</p>
         </a>
-        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
-          <p class="font-semibold text-slate-900">Transferências</p>
-          <p class="text-slate-500 mt-1">Aprovar ou rejeitar solicitações pendentes.</p>
-        </a>
-        <a href="#" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
+        <div class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition flex flex-col justify-between gap-2">
+          <a href="{% url 'transferencia_pendentes' %}" class="block">
+            <p class="font-semibold text-slate-900">Transferências</p>
+            <p class="text-slate-500 mt-1">Aprovar ou rejeitar solicitações pendentes.</p>
+          </a>
+          <a href="{% url 'transferencia_historico' %}" class="text-xs font-medium text-emerald-700 hover:underline">
+            Ver histórico aprovado &rarr;
+          </a>
+        </div>
+        <a href="{% url 'raca_list' %}" class="p-4 rounded border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition">
           <p class="font-semibold text-slate-900">Raças</p>
           <p class="text-slate-500 mt-1">Gerenciar raças cadastradas no sistema.</p>
         </a>

@@ -26,16 +26,17 @@
 
   <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900">Galinhas Registradas</h1>
-        <p class="text-sm text-slate-600 mt-1">
-          Listagem, busca por registro ou nome e gerenciamento de cadastros.
-        </p>
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'raca_list' %}" class="inline-flex items-center justify-center bg-white text-slate-700 border border-slate-300 text-sm font-medium px-4 py-2 rounded hover:bg-slate-50">
+          Gerenciar Raças
+        </a>
+        <a href="{% url 'transferencia_pendentes' %}" class="inline-flex items-center justify-center bg-white text-slate-700 border border-slate-300 text-sm font-medium px-4 py-2 rounded hover:bg-slate-50">
+          Transferências Pendentes
+        </a>
+        <a href="{% url 'animal_create' %}" class="inline-flex items-center justify-center bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded hover:bg-slate-800">
+          Cadastrar Galinha
+        </a>
       </div>
-      <a href="{% url 'animal_create' %}" class="inline-flex items-center justify-center bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded hover:bg-slate-800">
-        Cadastrar Galinha
-      </a>
-    </div>
 
     <form method="get" class="bg-white p-4 rounded-lg border border-slate-200 shadow-xs flex flex-col sm:flex-row gap-3">
       <input
@@ -79,6 +80,9 @@
                 <td class="py-3 px-4 space-x-3">
                   <a href="{% url 'animal_detail' animal.pk %}" class="text-slate-900 hover:underline font-medium">
                     Detalhes
+                  </a>
+                  <a href="{% url 'animal_certidao' animal.pk %}" class="text-emerald-700 hover:underline font-medium">
+                    Certidão
                   </a>
                   <a href="{% url 'animal_update' animal.pk %}" class="text-slate-600 hover:underline">
                     Editar
